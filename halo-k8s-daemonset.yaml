@@ -1,0 +1,44 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: cloudpassage-daemonset
+spec:
+  tolerations:
+    key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+  selector:
+    matchLabels:
+      name: cloudpassage
+  template:
+    metadata:
+      labels:
+        name: cloudpassage
+      name: cloudpassage
+    spec:
+      hostPID: true
+      hostNetwork: true
+      containers:
+      - name: cphalo
+        image: cloudpassage/cphalo
+        args:
+          - "--grid=https://grid.cloudpassage.com/grid"
+        securityContext:
+          privileged: true
+        env:
+          - name: AGENT_KEY
+            value: a3d274eb6d9c9cbb036ec117777897fb272fb9
+        volumeMounts:
+          - mountPath: /var/run/docker.sock
+            name: docker-sock-volume
+          - mountPath: /media/root
+            name: root
+        stdin: true
+        tty: true
+      volumes:
+        - name: docker-sock-volume
+          hostPath:
+            path: /var/run/docker.sock
+        - name: root
+          hostPath:
+            path: /
